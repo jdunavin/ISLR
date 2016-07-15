@@ -100,3 +100,55 @@ A[-c(1,3),-c(1,3,4)]
 
 #Dimension of a matrix
 dim(A)
+
+# Load some data
+# NOTE: You don't really need fix in Rstudio if all you want to 
+# do is see it
+Auto=read.table("Auto.data")
+fix(Auto)
+# That jacked up the column names, try again
+Auto=read.table("Auto.data", header=T,na.strings="?")
+fix(Auto)
+# Now try it with a csv
+Auto=read.csv("Auto.csv",header=T,na.strings="?")
+fix(Auto)
+dim(Auto)
+
+#Check out the data
+summary(auto)
+#5 missing horsepower values, get rid of their rows
+Auto=na.omit(Auto)
+# see column names
+names(Auto)
+
+# Make some summary plots
+plot(Auto$cylinders,Auto$mpg)
+Auto$cylinders=as.factor(Auto$cylinders)
+
+# Basic plot, making factors turned into a box plot
+plot(Auto$cylinders,Auto$mpg)
+
+# fill in the boxes with red
+plot(Auto$cylinders,Auto$mpg, col='red')
+
+# make box width proportional to category count
+plot(Auto$cylinders,Auto$mpg, col='red', varwidth=T)
+
+# turn the plot horizontally
+plot(Auto$cylinders,Auto$mpg, col='red', varwidth=T, horizontal=T)
+
+# axis labels
+plot(Auto$cylinders,Auto$mpg, col='red', varwidth=T, xlab="cylinders", ylab="MPG")
+
+#histogram time
+hist(Auto$mpg)
+hist(Auto$mpg, col='2')
+hist(Auto$mpg, col='2',breaks=16)
+
+#scatterplot matrix
+pairs(Auto)
+pairs(∼ mpg + displacement + horsepower + weight + acceleration , Auto)
+
+#Play with identify
+plot(Auto$horsepower,Auto$mpg)
+identify(Auto$horsepower, Auto$mpg, Auto$name)
