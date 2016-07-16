@@ -1,4 +1,4 @@
-# Applied Exercise 8
+### EXERCISE 8 ###
 
 # 8a load the data file, which is downloaded to your working directory
 college <- read.csv('college.csv')
