@@ -54,3 +54,87 @@ identify(college$Personal, college$Grad.Rate, rownames(college))
 # High personal spending = lower graduation rate?
 
 ### EXERCISE 9 ###
+# 9a) Quantitative vs qualitative
+summary(Auto)
+# Quantitative: mpg, displacement, hp, weight, accel
+# Qualitative: cylinders, name, year, origin
+
+# 9b) Range of each quantitative predictor
+range(Auto$mpg)
+range(Auto$displacement)
+range(Auto$horsepower)
+range(Auto$weight)
+range(Auto$acceleration)
+range(Auto$year)
+
+# 9c) Mean and SD of each quantitative predictor
+# Use mean() and sd() - OR cheat
+library(pastecs)
+stat.desc(Auto$mpg) # Mean is 9th value, SD is 13th
+stat.desc(Auto$displacement)[c(9,13)]
+stat.desc(Auto$horsepower)[c(9,13)]
+stat.desc(Auto$weight)[c(9,13)]
+stat.desc(Auto$acceleration)[c(9,13)]
+stat.desc(Auto$year)[c(9,13)]
+
+# how to do this same thing with a for loop
+quants <- c("mpg","displacement","horsepower")
+for (q in quants){
+  print(q)
+  m <- mean(Auto[[q]])
+  cat("The mean is: " , m, "\n")
+  s <- sd(Auto[[q]])
+  cat("The sd is: " , s, "\n")
+}
+
+#9d - Same thing, but take out 10th - 85th observations
+lessAuto <- Auto[-(10:85),]
+for (q in quants){
+  print(q)
+  m <- mean(lessAuto[[q]])
+  cat("The mean is: " , m, "\n")
+  s <- sd(lessAuto[[q]])
+  cat("The sd is: " , s, "\n")
+}
+
+# 9e) Graphical investigation
+pairs(∼ mpg + displacement + horsepower + weight + acceleration+year , Auto)
+# HP, mpg, engine size, and weight all decreased with later years
+# HP and weight increase with engine size but mpg and accel decrease
+
+plot(Auto$cylinders, Auto$mpg, xlab="Number of cylinders",ylab="Miles per gallon")
+# There appeared to be a peak in fuel economy at 4 cylinders
+identify(Auto$cylinders, Auto$mpg, Auto$name)
+
+# 9f) Useful in predicting mpg? (discussion)
+
+### EXERCISE 10 ###
+
+# 10a) What's in the data
+library(MASS)
+?Boston
+
+# 10b) Pairwise scatterplots
+pairs(~crim+indus+nox+age+dis+ptratio+lstat+medv, Boston)
+# Looks like older houses are in more polluted neighborhoods
+pairs(~crim+rad+tax+black+age+nox+zn, Boston)
+# new construction not being zoned for big lots
+
+# 10c) Associated with high crime rates
+# I didn't see anything in particular
+
+# 10d) Any suburbs have high crime rates, pt ratios, tax rates?
+
+#close to the highways?
+summary(as.factor(Boston$rad))
+par(mfrow=c(3,1), mar=c(4,1,2,1))
+plot(as.factor(Boston$rad), Boston$crim, varwidth=T, main="Crime rate")
+plot(as.factor(Boston$rad), Boston$ptratio, varwidth=T, main="P/T ratio")
+plot(as.factor(Boston$rad), Boston$tax, varwidth=T, main="Tax rate", xlab="Dist from hwy")
+
+#Abuts the river?
+summary(as.factor(Boston$chas))
+par(mfrow=c(3,1), mar=c(4,1,2,1))
+plot(as.factor(Boston$chas), Boston$crim, varwidth=T, main="Crime rate")
+plot(as.factor(Boston$chas), Boston$ptratio, varwidth=T, main="P/T ratio")
+plot(as.factor(Boston$chas), Boston$tax, varwidth=T, main="Tax rate", xlab="Abuts Charles River")
