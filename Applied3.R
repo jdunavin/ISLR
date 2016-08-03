@@ -273,3 +273,17 @@ plot(coefplot, coefplotall)
 # Not sure what this is saying about whether or not it should be kept. It had an awesome p-value in the single
 # models and a crappy one in the multiple model. Maybe it should be excluded, or it is collinear with another one
 
+for (i in seq(2,14)) {
+  x = Boston[,i]
+  fit = lm( Boston[,1] ~ x + I(x^2) + I(x^3) )
+  cat("Column number: " , i , "\n")
+  print(summary(fit))
+}
+
+# Column 3, 5, 14, 7 (maybe), 8, 11 (prob)
+# indus   -proportion of non-retail business acres per town.
+# nox     -nitrogen oxides concentration (parts per 10 million)
+# medv    -median value of owner-occupied homes in 000s
+# age     -proportion of owner-occupied units built prior to 1940.
+# dis     -weighted mean of distances to five Boston employment centres.
+# ptratio -pupil-teacher ratio by town
