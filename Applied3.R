@@ -148,3 +148,128 @@ summary(fit11a2)
 # Kinda weird - I expected a coefficient of near 1/2. That's not even close. t value and p value are the same,
 # as is r squared and F statistic.
 
+# 11d) Obviously they are the same, just switch the roles of x and y
+
+# 11e) Regression with an intercept - T stat on the slope coef is still the same
+fit11c1 = lm(y~x)
+fit11c2 = lm(x~y)
+summary(fit11c1)
+summary(fit11c2)
+
+### EXERCISE 12 ### 
+#12a x and y need to have same SSQ
+
+#12bc Example with 100 observations where coef of X != coef of Y
+x=rnorm(100)
+y=2 * x + rnorm(100)
+fit12b = lm(y~x+0)
+summary(fit12b)
+fit12b1 = lm(x~y+0)
+summary(fit12b1)
+
+y2 = abs(x)
+fit12b2 = lm(y2~x+0)
+summary(fit12b2)
+fit12b3 = lm(x~y2+0)
+summary(fit12b3)
+
+### EXERCISE 13 ###
+set.seed(1)
+x=rnorm(100)
+eps=rnorm(100,mean=0,sd=0.25)
+y = -1 + 0.5*x +eps
+
+plot(x,y)
+fit13 = lm(y~x)
+summary(fit13)
+# Predicted coefficients are very close to actual, actual lies within the CIs.
+abline(fit13, col="blue")
+abline(-1,0.5, col="red")
+legend("topright",legend=c("fit","real"), fill=c("blue","red"))
+
+fit132 = lm(y~I(x^2))
+summary(fit132)
+# This fit is obviously way worse
+
+epsless = rnorm(100, mean=0, sd=0.05)
+yless = -1 + 0.5*x + epsless
+fitless = lm(yless~x)
+summary(fitless)
+# As expected, much smaller CIs, better R^2
+
+epsmore = rnorm(100, mean=0, sd=1.5)
+ymore = -1 + 0.5*x + epsmore
+fitmore = lm(ymore~x)
+summary(fitmore)
+
+### EXERCISE 14, collinearity ###
+set.seed(1)
+x1=runif(100)
+x2=0.5*x1 + rnorm(100)/10
+y=2+2*x1 + 0.3*x2 + rnorm(100)
+
+plot(x1, x2)
+cor(x1,x2)
+
+fit14 = lm(y~x1+x2)
+summary(fit14)
+# These coefficient estimates really suck
+
+fit14x1 = lm(y~x1)
+summary(fit14x1)
+
+fit14x2 = lm(y~x2)
+summary(fit14x2)
+
+x1 = c(x1, 0.1)
+x2 = c(x2, 0.8)
+y=c(y,6)
+par(mfrow=c(2,2))
+fit14 = lm(y~x1+x2)
+summary(fit14)
+plot(fit14)
+
+fit14x1 = lm(y~x1)
+summary(fit14x1)
+plot(fit14x1)
+
+fit14x2 = lm(y~x2)
+summary(fit14x2)
+plot(fit14x2)
+
+### EXERCISE 15 ###
+library(ISLR)
+library(MASS)
+View(Boston)
+
+## AUTOMATION CHALLENGE! ##
+# There are 14 columns - I want to fit a simple lm to each of columns 2-14 against column 1.
+
+coefplot = vector(mode="numeric", length=0)
+for (i in seq(2,14)) {
+  fit = lm(Boston[,1]~Boston[,i])
+  # Want to list each slope coef and its p-value
+  # Also want to store the coefficients for plotting later
+  cat("Column number: ", i, "\n")
+  coefs = summary(fit)$coefficients[,1]
+  coefplot[i] = coefs[2]
+  pvals = summary(fit)$coefficients[,4]
+  cat("Slope coef: ", coefs[2], "\n")
+  cat("pvalue: ", pvals[2], "\n")
+}
+# Chop off the NA in the first place of coefplot
+coefplot <- coefplot[is.na(coefplot)==FALSE]
+
+# The only p-value that wasn't obscenely tiny was for column 4, which was the dummy for "abuts Charles River"
+
+# Now use all of the columns
+fitall <- lm(crim ~ ., data=Boston)
+coefplotall = summary(fitall)$coefficients[,1]
+coefplotall = coefplotall[-1]
+
+plot(coefplot, coefplotall)
+# The weird looking one is nox, which got a +30 from the single models and a -10 from the multiple model.
+# Nox represents the particulate matter in the air.
+# Not sure what this is saying about whether or not it should be kept. It had an awesome p-value in the single
+# models and a crappy one in the multiple model. Maybe it should be excluded, or it is collinear with another one
+
