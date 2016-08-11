@@ -65,6 +65,17 @@ table(qda.class, test$Direction)
 
 #10g - same thing with 1NN
 library(class)
-train.x <- train$Lag2
+train.x <- data.frame(Lag2=train$Lag2)
 train.y <- train$Direction
-test.x <- test$Lag2
+test.x <- data.frame(Lag2=test$Lag2)
+
+knn.pred <- knn(train.x, test.x, train.y, k=1)
+table(test$Direction, knn.pred)
+(32+21)/104
+# That sucks penis
+32/54
+22/(22+29)
+
+## Logistic regression looks the best but only barely, as the dumbest
+# possible predictor gets 61% and LR gets 62%
+
