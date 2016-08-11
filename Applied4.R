@@ -47,3 +47,24 @@ table(glm.pred, glm.actual)
 # Accuracy significantly improved
 
 #10e - Same thing but with LDA
+lda.fit <- lda(Direction~Lag2, data=train)
+lda.pred <- predict(lda.fit, test)
+lda.class <- lda.pred$class
+table(lda.class, test$Direction)
+# Same answers as logistic regression
+
+#10f - same thing but with QDA
+qda.fit <- qda(Direction~Lag2, data=train)
+qda.pred <- predict(qda.fit, test)
+qda.class <- qda.pred$class
+table(qda.class, test$Direction)
+# Always predicts up
+61/104 # accuracy
+61/104 # precision
+# recall is 100%
+
+#10g - same thing with 1NN
+library(class)
+train.x <- train$Lag2
+train.y <- train$Direction
+test.x <- test$Lag2
