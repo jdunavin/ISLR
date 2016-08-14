@@ -3,6 +3,7 @@
 library(ISLR)
 library(MASS)
 library(ggplot2)
+library(class)
 
 #10a
 summary(Weekly)
@@ -103,3 +104,78 @@ train <- df[train_ind,]
 test <- df[-train_ind,]
 
 #11d - Perform LDA on mpg01 with variables of your choosing
+#     and report test error
+lda.fit <- lda(mpg01~year+horsepower+weight, data=train)
+lda.pred <- predict(lda.fit, test)
+lda.class <- lda.pred$class
+table(lda.class, test$mpg01)
+1 - mean((lda.class==test$mpg01))
+# Gives a test error of 12.7%
+
+#11e - Same thing, with QDA
+qda.fit <- qda(mpg01~year+horsepower+weight, data=train)
+qda.pred <- predict(qda.fit, test)
+qda.class <- qda.pred$class
+table(qda.class, test$mpg01)
+1 - mean((qda.class==test$mpg01))
+# Gives a test error of 13.9%, which is a bit worse than LDA
+# Incidentally what is dumb guessing?
+table(df$mpg01)
+# Dumb guessing is 50/50 which I guess should have been obvious, duh
+
+#11f - same thing with logistic regresion
+glm.fit <- glm(mpg01~year+horsepower+weight, data=train, family="binomial")
+glm.probs <- predict(glm.fit, test, type="response")
+glm.pred <- rep(FALSE, nrow(test))
+glm.pred[glm.probs >=0.5] <- TRUE
+table(glm.pred, test$mpg01)
+1 - mean(glm.pred==test$mpg01)
+# Gives 8.9% test error, this is better
+
+#11g - Same thing with KNN, but use different values of K.
+# Try to identify the best values of k.
+# I'll use K = 1..10.
+
+train.x <- data.frame(year = train$year, horsepower=train$horsepower, weight=train$weight)
+test.x <- data.frame(year = test$year, horsepower=test$horsepower, weight=test$weight) 
+train.y <- train$mpg01
+results <- data.frame(k = rep(0,10), error = rep(0,10))
+set.seed(2417)
+for (k in seq(1:10)) {
+  results$k[k] <- k
+  knn.pred = knn(train.x, test.x, train.y, k=k)
+  results$error[k] = 1 - mean(knn.pred==test$mpg01)
+}
+plot(results)
+# Lowest test error belongs to k=7, but it's almost 17%
+# which would make it the worst one.
+
+### Exercise 12 ### Can you write functions?
+Power2 <- function(x) {
+  return(x^3)
+}
+print(Power2(2))
+
+Power3 <- function(x,a) {
+  return(x^a)
+}
+print(Power3(3,8))
+
+print(Power3(10,3))
+print(Power3(3, 17))
+print(Power3(131,3))
+
+# I messed up the names from the book but who cares
+
+x <- seq(1:10)
+y <- Power3(seq(1:10),2)
+plot(x,y, log='y')
+
+PlotPower <- function(x,a) {
+  y <- x^a
+  plot(x,y, log='y')
+}
+
+PlotPower(seq(1:10),3)
+
+### Don't really need to do exercise 13
