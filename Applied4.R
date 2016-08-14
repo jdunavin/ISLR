@@ -79,3 +79,27 @@ table(test$Direction, knn.pred)
 ## Logistic regression looks the best but only barely, as the dumbest
 # possible predictor gets 61% and LR gets 62%
 
+### EXERCISE 11 ###
+
+#11a
+mpg01 <- Auto$mpg>=median(Auto$mpg)
+df <- data.frame(Auto, mpg01=mpg01)
+
+#11b - Explore graphically
+pairs(~mpg+cylinders+displacement+horsepower+weight+acceleration+year, data=Auto)
+# this shows that several things are correlated with mpg, like displacement, horsepower, weight, and acceleration
+mosaicplot(table(df$mpg01, df$cylinders), col=hcl(c(240,120,80)), main="#cylinders by class", ylab="Number of cylinders", xlab="Above median MPG?")
+# This second plot seems to show that a dumb classifier that put (6,8 cylinders) == FALSE and <6 == TRUE would do pretty good
+boxplot(mpg~year, data=df, main="MPG by year",ylab="MPG",xlab="Year")
+# This shows that mpg tends to progress with time, but there are spikes in 1974 and in 1980
+
+#11c - Split into training and test sets
+0.8 * nrow(df)
+0.2 * nrow(df)
+samplesize <- floor(0.8*nrow(df))
+set.seed(2417)
+train_ind <- sample(seq_len(nrow(df)),size=samplesize)
+train <- df[train_ind,]
+test <- df[-train_ind,]
+
+#11d - Perform LDA on mpg01 with variables of your choosing
