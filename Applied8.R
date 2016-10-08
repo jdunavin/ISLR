@@ -7,6 +7,7 @@ library(randomForest)
 library(ggplot2)
 library(rpart)
 library(rpart.plot)
+library(gbm)
 
 ### Exercise 7
 mtry.val <- seq(3, 13, 1)
@@ -151,3 +152,42 @@ mean(oj.truth != yhat.tree2)
 
 
 ### Exercise 10 - Salary in Hitters data set
+# 10a) Remove observations with salary = NA & log transform
+Hitters <- Hitters[is.na(Hitters$Salary) == FALSE,]
+Hitters$logSalary <- log(Hitters$Salary)
+
+# 10b) Training set of size 200, rest go into test
+train <- sample(1:nrow(Hitters), 200, FALSE)
+
+# 10cd) Perform boosting on training set with 1,000 trees for different lambdas
+#   Plots of lambda versus training MSE
+#   Plots of lambda versus test MSE
+
+set.seed(1)
+lambda = 10 ^ seq(-4, -1, 0.5)
+i = 1
+err.df <- data.frame(lambda = lambda, train.err = rep(NA, length(lambda)), test.err = rep(NA, length(lambda)))
+for (l in lambda) {
+  boost.hitters <- gbm(logSalary ~ . - Salary, data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
+  yhat.boost <- predict(boost.hitters, newdata = Hitters[train,], n.trees = 1000)
+  err.df$lambda[i] = l
+  err.df$train.err[i] = mean((yhat.boost - Hitters[train, 'logSalary']) ^ 2)
+  i = i + 1
+}
+i = 1
+for (l in lambda) {
+  boost.hitters <- gbm(logSalary ~ . - Salary, data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
+  yhat.boost <- predict(boost.hitters, newdata = Hitters[ - train,], n.trees = 1000)
+  err.df$test.err[i] = mean((yhat.boost - Hitters[ - train, 'logSalary']) ^ 2)
+  i = i + 1
+}
+ggplot(data = err.df, aes(x = lambda)) +
+  geom_line(aes(y = train.err, color = 'Training MSE')) +
+  geom_line(aes(y = test.err, color = 'Test MSE')) +
+  labs(x = 'Shrinkage param', y = 'MSE') +
+  scale_color_manual("Error metrics", values = c('Training MSE' = 'red', 'Test MSE' = 'blue')) +
+  theme(legend.position = 'top', legend.direction = 'horizontal') +
+  ggtitle("Mean squared error for different values of lambda")
+# lambda = 0.01 resulted in the lowest test error of 21.3%
+
+# Try lasso regression and see if you can beat this
