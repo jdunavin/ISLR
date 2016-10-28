@@ -151,10 +151,11 @@ mean(oj.truth != yhat.tree2)
 # 20.37%, a little better than unpruned
 
 
-### Exercise 10 - Salary in Hitters data set
+# Exercise 10
+
 # 10a) Remove observations with salary = NA & log transform
 Hitters <- Hitters[is.na(Hitters$Salary) == FALSE,]
-Hitters$logSalary <- log(Hitters$Salary)
+Hitters$Salary <- log(Hitters$Salary)
 
 # 10b) Training set of size 200, rest go into test
 train <- sample(1:nrow(Hitters), 200, FALSE)
@@ -168,17 +169,17 @@ lambda = 10 ^ seq(-4, -1, 0.5)
 i = 1
 err.df <- data.frame(lambda = lambda, train.err = rep(NA, length(lambda)), test.err = rep(NA, length(lambda)))
 for (l in lambda) {
-  boost.hitters <- gbm(logSalary ~ . - Salary, data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
+  boost.hitters <- gbm(Salary ~ . , data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
   yhat.boost <- predict(boost.hitters, newdata = Hitters[train,], n.trees = 1000)
   err.df$lambda[i] = l
-  err.df$train.err[i] = mean((yhat.boost - Hitters[train, 'logSalary']) ^ 2)
+  err.df$train.err[i] = mean((yhat.boost - Hitters[train, 'Salary']) ^ 2)
   i = i + 1
 }
 i = 1
 for (l in lambda) {
-  boost.hitters <- gbm(logSalary ~ . - Salary, data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
+  boost.hitters <- gbm(Salary ~ . , data = Hitters[train,], distribution = "gaussian", n.trees = 1000, interaction.depth = 4, shrinkage = l)
   yhat.boost <- predict(boost.hitters, newdata = Hitters[ - train,], n.trees = 1000)
-  err.df$test.err[i] = mean((yhat.boost - Hitters[ - train, 'logSalary']) ^ 2)
+  err.df$test.err[i] = mean((yhat.boost - Hitters[ - train, 'Salary']) ^ 2)
   i = i + 1
 }
 ggplot(data = err.df, aes(x = lambda)) +
@@ -188,6 +189,62 @@ ggplot(data = err.df, aes(x = lambda)) +
   scale_color_manual("Error metrics", values = c('Training MSE' = 'red', 'Test MSE' = 'blue')) +
   theme(legend.position = 'top', legend.direction = 'horizontal') +
   ggtitle("Mean squared error for different values of lambda")
-# lambda = 0.01 resulted in the lowest test error of 21.3%
 
-# Try lasso regression and see if you can beat this
+min(err.df$test.err)
+lambda[which.min(err.df$test.err)]
+# lambda = 0.01 resulted in the lowest test error of 0.171
+
+# 10e) Try lasso regression and see if you can beat this
+set.seed(134)
+x <- model.matrix(Salary ~ ., data = Hitters)
+y <- Hitters$Salary
+grid = 10 ^ seq(10, -2, length = 100)
+lasso.mod <- glmnet(x[train,], y[train], alpha = 1, lambda = grid)
+plot(lasso.mod)
+cv.out <- cv.glmnet(x[train,], y[train], alpha = 1)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+lasso.pred <- predict(lasso.mod, s = 0.01, newx = x[ - train,])
+mean((lasso.pred - y[ - train]) ^ 2)
+# Significantly worse at 36.5%
+
+# 10f) most important predictors
+boost.best <- gbm(Salary ~ . , data = Hitters[train,], distribution = "gaussian", n.trees = 1000, shrinkage = 0.01)
+summary(boost.best)
+
+# 10g) bagging
+
+set.seed(21)
+rf.hit <- randomForest(Salary ~ ., data = Hitters[train,], ntree = 500, mtry = 19)
+rf.pred = predict(rf.hit, Hitters[ - train,])
+mean((Hitters$Salary[ - train] - rf.pred) ^ 2)
+# A little bit worse than boosting
+
+# EXERCISE 11 - Caravan data
+
+# 11a) Training and test sets
+train <- 1:1000
+Caravan$Purchase <- ifelse(Caravan$Purchase == 'Yes',1,0)
+c.train <- Caravan[train,]
+c.test <- Caravan[-train,]
+
+# 11b) Fit a boosted model with Purchase as the response & show most important
+set.seed(342)
+boost.mod <- gbm(Purchase ~ ., data = c.train, distribution = "bernoulli", n.trees = 1000, shrinkage = 0.01)
+summary(boost.mod)
+
+# 11c) Predict a bunch of stuff
+
+# Predict the response on test data
+boost.prob <- predict(boost.mod, c.test, n.trees = 1000, type = 'response')
+boost.pred <- ifelse(boost.prob > 0.2, 1, 0)
+table(c.test$Purchase, boost.pred)
+34 / (137 + 34) # the number of predicted purchasers that actually purchase
+
+# What does glm say?
+lm.mod <- glm(Purchase ~ ., data = c.train, family = 'binomial')
+lm.prob <- predict(lm.mod, c.test, type='response')
+lm.pred <- ifelse(lm.prob > 0.2, 1, 0)
+table(c.test$Purchase, lm.pred)
+58 / (350 + 58)
+# This paints a worse picture than boosting
