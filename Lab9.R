@@ -54,3 +54,48 @@ xtest[ytest==1,]= xtest[ytest==1,] + 1
 testdat=data.frame(x=xtest , y=as.factor(ytest))
 ypred<- predict(bestmod, testdat)
 table(predict=ypred, truth=testdat$y)
+
+# Try with cost of 0.01
+svmfit=svm(y~., data=df , kernel="linear", cost=.01,
+    scale=FALSE)
+ypred=predict(svmfit ,testdat)
+table(predict=ypred , truth=testdat$y )
+
+# What about when they're neatly linearly separable?
+x[y==1,]=x[y==1,]+0.5
+plot(x, col=(y+5)/2, pch=19)
+dat=data.frame(x=x,y=as.factor(y))
+svmfit=svm(y~., data=dat , kernel="linear", cost=1e5)
+summary(svmfit)
+plot(svmfit, dat)
+
+svmfit=svm(y~., data=dat , kernel="linear", cost=1)
+summary(svmfit)
+plot(svmfit, dat)
+
+## 9.2 Support Vector Machines
+
+# Mock up some data
+set.seed(1)
+x<-matrix(rnorm(200*2), ncol=2)
+x[1:100,] <- x[1:100,]+2
+y<-c(rep(1,150),rep(2,50))
+dat <- data.frame(x, y=as.factor(y))
+
+plot(x, col=y)
+
+train <- sample(200,100)
+svmfit <- svm(y~., data=dat[train,], kernel='radial', gamma=1, cost=1)
+plot(svmfit, dat[train,])
+summary(svmfit)
+
+svmfit <- svm(y~., data=dat[train,], kernel='radial', gamma=1, cost=1e5)
+plot(svmfit, dat[train,])
+
+# Cross validate for best cost and gamma
+set.seed(1)
+tune.out <- tune(svm, y~.,data=dat[train,],kernel='radial',
+  ranges=list(cost=c(0.1,1,10,100,1000),
+  gamma=c(0.5,1,2,3,4)))
+summary(tune.out)
+table(true=dat[-train ,"y"], pred=predict(tune.out$best.model, newx=dat[-train ,]))
